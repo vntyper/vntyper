@@ -3,4 +3,4 @@ extern crate vntyper;
 use vntyper::input::Input;
 
 #[test]
-fn main() {}
+fn compile() {}

@@ -1,17 +1,13 @@
-extern crate rustc_serialize;
+// Copyright 2016 Do Duy
+// Licenses under the MIT license, see the LICENSE file or
+// <http://opensource.org/license/MIT>
 
-use rustc_serialize::json;
+extern crate vntyper;
 
-#[derive(RustcDecodable, RustcEncodable)]
-struct Foo {
-    a: i64,
-    x: i32,
-}
+use vntyper::output::Output;
+use vntyper::parser;
 
 fn main() {
-    let foo = Foo{
-        a: 3,
-        x: 2,
-    };
-    println!("{}", json::encode(&foo).unwrap());
+    let x = Output::new("some string".to_owned());
+    println!("{:?}", parser::encode(&x));
 }

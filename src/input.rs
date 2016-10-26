@@ -5,6 +5,7 @@
 use modifier::Modifier;
 use input_method::InputMethod;
 
+//#[derive(RustcDecodable, RustcEncodable)]
 pub struct Input {
     word: String,
     modifier: Modifier,

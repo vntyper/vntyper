@@ -3,8 +3,12 @@
 // <http://opensource.org/licenses/MIT>
 
 #![allow(dead_code)]
+extern crate rustc_serialize;
+
+pub use rustc_serialize::json as parser;
 
 pub mod input;
+pub mod output;
 
 mod modifier;
 mod input_method;
