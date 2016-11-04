@@ -4,6 +4,8 @@
 
 use modifier::Modifier;
 
+#[derive(Debug, PartialEq)]
+#[derive(RustcDecodable, RustcEncodable)]
 pub struct InputMethod {
     aa: Modifier,
     aw: Modifier,
@@ -17,4 +19,23 @@ pub struct InputMethod {
     r: Modifier,
     x: Modifier,
     j: Modifier,
+}
+
+static TELEX: InputMethod = InputMethod {
+    aa: Modifier { key: 'a' },
+    aw: Modifier { key: 'w' },
+    ee: Modifier { key: 'e' },
+    oo: Modifier { key: 'o' },
+    ow: Modifier { key: 'w' },
+    uw: Modifier { key: 'w' },
+    dd: Modifier { key: 'd' },
+    s: Modifier { key: 's' },
+    f: Modifier { key: 'f' },
+    r: Modifier { key: 'r' },
+    x: Modifier { key: 'x' },
+    j: Modifier { key: 'j' },
+};
+
+impl InputMethod {
+    pub fn telex() -> &'static InputMethod { &TELEX }
 }

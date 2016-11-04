@@ -4,10 +4,5 @@
 
 extern crate vntyper;
 
-use vntyper::output::Output;
-use vntyper::parser;
-
 fn main() {
-    let x = Output::new("some string".to_owned());
-    println!("{:?}", parser::encode(&x));
 }
