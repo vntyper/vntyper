@@ -5,35 +5,35 @@
 #[derive(Debug, PartialEq, Clone)]
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct InputMethod {
-    aa: char,
-    aw: char,
-    ee: char,
-    oo: char,
-    ow: char,
-    uw: char,
-    dd: char,
-    s: char,
-    f: char,
-    r: char,
-    x: char,
-    j: char,
+    aa: u32,
+    aw: u32,
+    ee: u32,
+    oo: u32,
+    ow: u32,
+    uw: u32,
+    dd: u32,
+    s: u32,
+    f: u32,
+    r: u32,
+    x: u32,
+    j: u32,
 }
 
 impl InputMethod {
     pub fn new(arr: [char; 12]) -> InputMethod {
         InputMethod {
-            aa: arr[0],
-            aw: arr[1],
-            ee: arr[2],
-            oo: arr[3],
-            ow: arr[4],
-            uw: arr[5],
-            dd: arr[6],
-            s: arr[7],
-            f: arr[8],
-            r: arr[9],
-            x: arr[10],
-            j: arr[11],
+            aa: arr[0] as u32,
+            aw: arr[1] as u32,
+            ee: arr[2] as u32,
+            oo: arr[3] as u32,
+            ow: arr[4] as u32,
+            uw: arr[5] as u32,
+            dd: arr[6] as u32,
+            s: arr[7] as u32,
+            f: arr[8] as u32,
+            r: arr[9] as u32,
+            x: arr[10] as u32,
+            j: arr[11] as u32,
         } 
     }
     pub fn telex() -> InputMethod {
