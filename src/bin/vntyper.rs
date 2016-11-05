@@ -18,7 +18,7 @@ fn main() {
     window.set_title("Vietnamese Input");
     window.show_all();
 
-    text_view.connect_key_press_event(|w, ev| {
+    text_view.connect_key_press_event(|_, ev| {
         println!("{}", ev.get_keyval() as u8 as char);
         Inhibit(false)
     });

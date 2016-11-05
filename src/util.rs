@@ -2,4 +2,4 @@
 // Licensed under the MIT license, see the LICENSE file or
 // <http://opensource.org/licenses/MIT>
 
-pub fn is_vietnamese(text: &str) -> bool { false }
+pub fn is_vietnamese(_: &str) -> bool { false }

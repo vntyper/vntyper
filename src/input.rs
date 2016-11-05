@@ -15,18 +15,23 @@ pub struct Input {
 }
 
 impl Input {
-    fn new(a: String, b: char, c: InputMethod) -> Input {
+    pub fn new(a: String, b: char, c: InputMethod) -> Input {
         Input {
             word: a,
             modifier: b,
             input_method: c,
         }
     }
+
+/// Get output of the input - the most important function of the
+/// crate.
+/// This function return a new string as a replacement for `Input.word`.
+/// If the `Input.word` is not a Vietnamese string, return `None`.
     pub fn output(&self) -> Option<String> {
-        if !util::is_vietnamese(&self.word) {
-            None
-        } else {
+        if util::is_vietnamese(&self.word) {
             panic!();
+        } else {
+            None
         }
     }
     pub fn decode(s: &str) -> Result<Input, json::DecoderError> {
