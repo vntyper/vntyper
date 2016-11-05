@@ -16,8 +16,8 @@ impl Output {
 
 #[test]
 fn encode() {
-    use parser;
-    let x = parser::encode(&Output::new("some string".to_owned()));
+    use rustc_serialize::json;
+    let x = json::encode(&Output::new("some string".to_owned()));
     assert!(x.is_ok());
     assert_eq!(x.unwrap(), "{\"word\":\"some string\"}")
 }

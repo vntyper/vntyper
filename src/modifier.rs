@@ -2,7 +2,7 @@
 // Licensed under the MIT license, see the LICENSE file or
 // <http://opensource.org/licenses/MIT>
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Modifier {
     pub key: char,
