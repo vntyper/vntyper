@@ -71,6 +71,14 @@ impl fmt::Display for VChar {
         }
     }
 }
+#[test]
+fn vchar_to_string_test() {
+    assert_eq!(&VChar::Vovel(Vovel::Aw, Tone::F).to_string(), "ằ");
+    assert_eq!(&VChar::Vovel(Vovel::O, Tone::N).to_string(), "o");
+    assert_eq!(&VChar::Vovel(Vovel::Ee, Tone::J).to_string(), "ệ");
+    assert_eq!(&VChar::Consonant("x").to_string(), "x");
+    assert_eq!(&VChar::Consonant("đ").to_string(), "đ");
+}
 
 // Return a table to lookup from `VChar::Vovel` to string.
 fn vovel_table() -> &'static BTreeMap<(Vovel, Tone), &'static str> {
@@ -120,6 +128,14 @@ fn vovel_table() -> &'static BTreeMap<(Vovel, Tone), &'static str> {
     &X
 }
 
+fn vovel_table_reverse() -> &'static BTreeMap<&'static str, (Vovel, Tone)> {
+    lazy_static! {
+        static ref X: BTreeMap<&'static str, (Vovel, Tone)> = vovel_table().iter()
+            .map(|(key, value)| (value.clone(), key.clone())).collect();
+    }
+    &X
+}
+
 #[test]
 fn vovel_table_test() {
     let map = vovel_table();
@@ -130,12 +146,4 @@ fn vovel_table_test() {
     assert_eq!(map.get(&(Vovel::U, Tone::R)), Some(&"ủ"));
     assert_eq!(map.get(&(Vovel::E, Tone::X)), Some(&"ẽ"));
     assert_eq!(map.get(&(Vovel::Ow, Tone::R)), Some(&"ở"));
-}
-#[test]
-fn vchar_to_string() {
-    assert_eq!(&VChar::Vovel(Vovel::Aw, Tone::F).to_string(), "ằ");
-    assert_eq!(&VChar::Vovel(Vovel::O, Tone::N).to_string(), "o");
-    assert_eq!(&VChar::Vovel(Vovel::Ee, Tone::J).to_string(), "ệ");
-    assert_eq!(&VChar::Consonant("x").to_string(), "x");
-    assert_eq!(&VChar::Consonant("đ").to_string(), "đ");
 }
