@@ -5,7 +5,6 @@
 use util;
 use modifier::Modifier;
 use input_method::InputMethod;
-use output::Output;
 use rustc_serialize::json;
 
 #[derive(Debug, PartialEq)]
@@ -13,48 +12,39 @@ use rustc_serialize::json;
 pub struct Input {
     word: String,
     modifier: Modifier,
-    input_method: Option<InputMethod>,
+    input_method: InputMethod,
 }
 
 impl Input {
-    fn new(a: String, b: char, c: Option<InputMethod>) -> Input {
+    fn new(a: String, b: char, c: InputMethod) -> Input {
         Input {
             word: a,
             modifier: Modifier::new(b),
-            input_method: c.or(Some(InputMethod::telex())),
+            input_method: c,
         }
     }
-    pub fn output(&self) -> Output {
-        let method = self.input_method.clone().unwrap();
+    pub fn output(&self) -> Option<String> {
         if !util::is_vietnamese(&self.word) {
-            Output::new(format!("{}{}", self.word.clone(), self.modifier.key))
+            None
         } else {
             panic!();
         }
     }
     pub fn decode(s: &str) -> Result<Input, json::DecoderError> {
-        match json::decode::<Input>(s) {
-            Err(e) => Err(e),
-            Ok(mut x) => {
-                if x.input_method.is_none() {
-                    x.input_method = Some(InputMethod::telex());
-                }
-                Ok(x)
-            },
-        }
+        json::decode::<Input>(s)
     }
 }
 
 #[test]
-fn decode() {
-    let x = Input::new("text".to_owned(), 'c', None);
-    let res = "{\"word\":\"text\",\"modifier\":{\"key\":\"c\"},\"input_method\":null}";
-    assert!(Input::decode(res).is_ok());
-    assert_eq!(Input::decode(res).unwrap(), x);
+fn encode_decode() {
+    let x = Input::new("text".to_owned(), 'c', InputMethod::telex());
+    let res = json::encode(&x).unwrap();
+    assert!(Input::decode(&res).is_ok());
+    assert_eq!(Input::decode(&res).unwrap(), x);
 }
 #[test]
-fn english() {
-    let input = Input::new("what".to_owned(), 's', None);
+fn non_vietnamese() {
+    let input = Input::new("what".to_owned(), 's', InputMethod::telex());
     let output = input.output();
-    assert_eq!(output, Output::new("whats".to_owned()));
+    assert_eq!(output, None);
 }
