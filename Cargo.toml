@@ -5,3 +5,4 @@ authors = ["Do Duy <juchiast@gmail.com>"]
 
 [dependencies]
 rustc-serialize="0.3.19"
+gtk = { git = "https://github.com/gtk-rs/gtk.git" }
