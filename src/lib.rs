@@ -7,6 +7,5 @@ extern crate rustc_serialize;
 
 pub mod input;
 
-mod modifier;
 mod input_method;
 mod util;

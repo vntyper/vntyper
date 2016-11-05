@@ -3,7 +3,6 @@
 // <http://opensource.org/licenses/MIT>
 
 use util;
-use modifier::Modifier;
 use input_method::InputMethod;
 use rustc_serialize::json;
 
@@ -11,7 +10,7 @@ use rustc_serialize::json;
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Input {
     word: String,
-    modifier: Modifier,
+    modifier: char,
     input_method: InputMethod,
 }
 
@@ -19,7 +18,7 @@ impl Input {
     fn new(a: String, b: char, c: InputMethod) -> Input {
         Input {
             word: a,
-            modifier: Modifier::new(b),
+            modifier: b,
             input_method: c,
         }
     }
