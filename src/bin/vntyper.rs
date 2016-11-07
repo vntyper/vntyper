@@ -34,14 +34,29 @@ impl Buffer for TextBuffer {
         self.get_insert().map(|x| self.get_iter_at_mark(&x))
     }
     fn complete(&self, c: char) -> Inhibit {
-        let end_iter = gtk_try!(self.get_insert_iter());
+        let mut end_iter = gtk_try!(self.get_insert_iter());
 
         let mut start_iter = end_iter.clone();
         start_iter.backward_chars(15);
 
         let text = gtk_try!(self.get_text(&start_iter, &end_iter, false));
-        println!("{}", text);
-        Inhibit(false)
+        let vntyper = input::Input::new(text, c, input_method::InputMethod::telex());
+        let output = vntyper.output();
+        println!("{:?}", output);
+        let mut set_text = |s: &str| {
+            self.delete(&mut start_iter, &mut end_iter);
+            self.insert(&mut start_iter, s);
+        };
+        match output {
+            Err(s) => {
+                set_text(&s);
+                Inhibit(false)
+            },
+            Ok(s) => {
+                set_text(&s);
+                Inhibit(true)
+            },
+        }
     }
 }
 

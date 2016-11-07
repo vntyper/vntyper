@@ -141,6 +141,23 @@ impl VChar {
             Err(())
         }
     }
+    pub fn from_char(c: char) -> (Self, bool) {
+        let c_lower: Vec<char> = c.to_lowercase().collect();
+        // Some foreign characters have longer size when lowercased.
+        // These characters are considered as `Invalid` as it is foreign.
+        if c_lower.len() > 1 {
+            (VChar::Invalid(c), false)
+        } else {
+            let c_lower = c_lower[0];
+            if let Some(&(ref x, ref y, ref z)) = vovel_table_reverse().get(&c_lower) {
+                (VChar::Vovel(x.clone(), y.clone(), z.clone()), c.is_uppercase())
+            } else if consonants().contains(&c_lower) {
+                (VChar::Consonant(c_lower), c.is_uppercase())
+            } else {
+                (VChar::Invalid(c_lower), c.is_uppercase())
+            }
+        }
+    }
 }
 
 /// This struct hold a sequence of character for Vietnamese's text processing.
@@ -187,21 +204,8 @@ impl VWord {
         // Return value
         let mut ret = VWord::new();
         for c in s.chars() {
-            let c_lower: Vec<char> = c.to_lowercase().collect();
-            // Some foreign characters have longer size when lowercased.
-            // These characters are considered as `Invalid` as it is foreign.
-            if c_lower.len() > 1 {
-                ret.push(VChar::Invalid(c), false);
-            } else {
-                let c_lower = c_lower[0];
-                if let Some(&(ref x, ref y, ref z)) = vovel_table_reverse().get(&c_lower) {
-                    ret.push(VChar::Vovel(x.clone(), y.clone(), z.clone()), c.is_uppercase());
-                } else if consonants().contains(&c_lower) {
-                    ret.push(VChar::Consonant(c_lower), c.is_uppercase());
-                } else {
-                    ret.push(VChar::Invalid(c_lower), c.is_uppercase());
-                }
-            }
+            let (x, y) = VChar::from_char(c);
+            ret.push(x, y);
         }
         ret
     }
@@ -239,10 +243,23 @@ impl VWord {
         }
 
         // if 'u' followed 'q' then 'u' is not a vovel
-        if let Some(&VChar::Consonant(q)) = self.data.get(
-            vovels_index[0].checked_sub(1).unwrap_or(vovels_index[0])
-        ) {
-            if q == 'q' {
+        if (Raw::U, Flag::N) == vovels[0] {
+            if Some(&VChar::Consonant('q')) == self.data.get(
+                vovels_index[0].checked_sub(1).unwrap_or(vovels_index[0])
+            ) {
+                vovels.remove(0);
+                vovels_index.remove(0);
+            }
+        }
+
+        if vovels.len() == 0 {
+            return Err(());
+        }
+        // In 'gia', 'i' is not vovel, but in 'gi', 'i' is vovel.
+        if vovels.len()>1 && (Raw::I, Flag::N) == vovels[0] {
+            if Some(&VChar::Consonant('g')) == self.data.get(
+                vovels_index[0].checked_sub(1).unwrap_or(vovels_index[0])
+            ) {
                 vovels.remove(0);
                 vovels_index.remove(0);
             }
@@ -393,7 +410,7 @@ fn test_vword_parse() {
         vec![VChar::Consonant('đ')], vec![true]
     ));
 
-    assert_eq!(VWord::from_str("cháu").to_string(), "cháu");
+    assert_eq!(VWord::from_str(".cháu").to_string(), ".cháu");
     assert_eq!(VWord::from_str(" _asx").to_string(), " _asx");
     assert_eq!(VWord::from_str("tiếng ViỆt").to_string(), "tiếng ViỆt");
     assert_eq!(VWord::from_str("ĐộNg").to_string(), "ĐộNg");
@@ -423,6 +440,7 @@ fn test_vword_set_tone() {
     test!("thuy", S, "thúy", Ok(())); test!("toan", S, "toán", Ok(()));
     test!("oan", S, "oán", Ok(())); test!("tau", F, "tàu", Ok(()));
     test!("ay", R, "ảy", Ok(())); test!("nguyên", X, "nguyễn", Ok(()));
+    test!(".chau", S, ".cháu", Ok(()));
 }
 #[test]
 fn teset_vword_toggle() {
@@ -446,4 +464,5 @@ fn teset_vword_toggle() {
     test!(d "dang", "đang", Ok(()) ); test!(d "đang", "dang", Err(()) );
     test!(v E, D, "e", "ê", Ok(())); test!(v A, D, "â", "a", Err(()));
     test!(v O, W, "ố", "ớ", Ok(())); test!(v O, D, "ồ", "ò", Err(()));
+    test!(v U, W, "u", "ư", Ok(()));
 }

@@ -38,6 +38,7 @@ fn test_get_english_form() {
     test("Nhập môn lập trình", "nhap mon lap trinh");
 }
 #[test]
+#[ignore]
 fn test_is_vietnamese() {
     fn test(x: &'static str, b: bool) {
         let tmp = VWord::from_str(x);
