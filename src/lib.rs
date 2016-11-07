@@ -9,7 +9,6 @@ extern crate rustc_serialize;
 extern crate lazy_static;
 
 pub mod input;
-
-mod input_method;
-mod util;
-mod vword;
+pub mod input_method;
+pub mod util;
+pub mod vword;

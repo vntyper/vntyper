@@ -5,6 +5,8 @@
 use std::collections::BTreeSet;
 use std::collections::BTreeMap;
 use std::fmt;
+use std::slice;
+use std::iter;
 
 /// Return set of Vietnamese's consonants (phụ âm)
 pub fn consonants() -> &'static BTreeSet<char> {
@@ -43,7 +45,7 @@ pub enum Raw {
 /// `Flag::W`: Flag for ă, ư, ơ
 /// `Flag::D`: Flag for â, ô, ê
 #[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug)]
-enum Flag {
+pub enum Flag {
     N, // Flag for a, e, i, o, y, u
     W, // Flag for ă, ơ,...
     D, // Flag for â ê ô 
@@ -112,7 +114,7 @@ impl fmt::Display for VChar {
             &VChar::Vovel(ref x, ref y, ref z) => {
                 let c = vovel_table().get(&(x.clone(), y.clone(), z.clone()));
                 if let Some(c) = c {
-                    write!(f, "{}")
+                    write!(f, "{}", c)
                 } else {
                     write!(f, " ")
                 }
@@ -126,9 +128,17 @@ impl VChar {
     pub fn to_char(&self) -> char {
         self.to_string().chars().next().unwrap()
     }
-    fn set_tone(&mut self, tone: &Tone) {
+    fn toggle_tone(&mut self, tone: &Tone) -> Result<(), ()> {
         if let &mut VChar::Vovel(_, _, ref mut x) = self {
-            *x = tone.clone();
+            if x == tone {
+                *x = Tone::N;
+                Err(())
+            } else {
+                *x = tone.clone();
+                Ok(())
+            }
+        } else {
+            Err(())
         }
     }
 }
@@ -136,7 +146,7 @@ impl VChar {
 /// This struct hold a sequence of character for Vietnamese's text processing.
 /// The data it hold does not need to be a valid Vietnamese text.
 #[derive(Clone, Debug, PartialEq)]
-struct VWord {
+pub struct VWord {
     data: Vec<VChar>,
     upcase: Vec<bool>,
 }
@@ -167,8 +177,8 @@ impl VWord {
             upcase: Vec::new(),
         }
     }
-// Append a VChar at the end.
-    fn push(&mut self, c: VChar, is_uppercase: bool) {
+/// Append a VChar at the end.
+    pub fn push(&mut self, c: VChar, is_uppercase: bool) {
         self.data.push(c);
         self.upcase.push(is_uppercase);
     }
@@ -195,14 +205,14 @@ impl VWord {
         }
         ret
     }
-    fn new_raw(data: Vec<VChar>, upcase: Vec<bool>) -> VWord {
+    pub fn new_raw(data: Vec<VChar>, upcase: Vec<bool>) -> VWord {
         VWord {
             data: data,
             upcase: upcase,
         }
     }
 /// Set the tone of word
-    pub fn set_tone(&mut self, tone: &Tone) {
+    pub fn toggle_tone(&mut self, tone: &Tone) -> Result<(), ()> {
         let mut vovels_index: Vec<usize> = Vec::new();
         let mut vovels: Vec<(Raw, Flag)> = Vec::new();
         // Get list of vovels and its index
@@ -225,7 +235,7 @@ impl VWord {
         assert!(vovels.len() <= 3); // TEST
 
         if vovels.len() == 0 {
-            return ();
+            return Err(());
         }
 
         // if 'u' followed 'q' then 'u' is not a vovel
@@ -238,9 +248,12 @@ impl VWord {
             }
         }
 
+        if vovels.len() == 0 {
+            return Err(());
+        }
+
         if vovels.len() == 1 {
-            self.data[vovels_index[0]].set_tone(&tone);
-            return ();
+            return self.data[vovels_index[0]].toggle_tone(&tone);
         }
 
         // Double vovel (nguyên âm đôi)
@@ -251,8 +264,7 @@ impl VWord {
                         let x = (Raw::$x, Flag::$y);
                         let y = (Raw::$a, Flag::$b);
                         if x == vovels[i] && y == vovels[i+1] {
-                            self.data[vovels_index[i+$z]].set_tone(&tone);
-                            return ();
+                            return self.data[vovels_index[i+$z]].toggle_tone(&tone);
                         };
                     }
                 }
@@ -273,22 +285,20 @@ impl VWord {
             if vovels[i] == (Raw::Y, Flag::N)
             || vovels[i] == (Raw::U, Flag::N)
             || vovels[i] == (Raw::O, Flag::N) {
-                self.data[vovels_index[i-1]].set_tone(&tone);
-                return ();
+                return self.data[vovels_index[i-1]].toggle_tone(&tone);
             }
         }
         // 'u', 'o' can be a "phụ âm đầu".
         for i in 0..vovels.len()-1 {
             if vovels[i] == (Raw::O, Flag::N)
             || vovels[i] == (Raw::U, Flag::N) {
-                self.data[vovels_index[i+1]].set_tone(&tone);
-                return ();
+                return self.data[vovels_index[i+1]].toggle_tone(&tone);
             }
         }
 
         // 'Self' may be an invalid Vietnamese word,
         // temporary set tone for the last vovels.
-        self.data.last_mut().unwrap().set_tone(&tone);
+        return self.data.last_mut().unwrap().toggle_tone(&tone);
     }
 /// Toggle between 'd' and 'đ'.
 /// Return `Err(())` when turn from 'đ' to 'd'.
@@ -302,7 +312,7 @@ impl VWord {
                 return Err(());
             }
         }
-        Ok(())
+        Err(())
     }
 /// Toggle a specific flag of a specific raw vovel.
 /// Example, toggle flag `Flag::D` of `Raw::A` will turn:
@@ -323,7 +333,10 @@ impl VWord {
             }
         }
 
-        Ok(())
+        Err(())
+    }
+    pub fn iter(&self) -> iter::Zip<slice::Iter<VChar>, slice::Iter<bool>> {
+        self.data.iter().zip(self.upcase.iter())
     }
 }
 
@@ -347,20 +360,20 @@ fn test_vchar_to_string() {
 #[test]
 fn test_vchar_set_tone() {
     macro_rules! test {
-        ( $x:ident, $a:ident, $y:ident, $z:ident, $s:expr ) => {
+        ( $x:ident, $a:ident, $y:ident, $z:ident, $s:expr, $r:expr ) => {
             {
                 let mut tmp = VChar::Vovel(Raw::$x, Flag::$a, Tone::$y);
-                tmp.set_tone(&Tone::$z);
+                assert_eq!(tmp.toggle_tone(&Tone::$z), $r);
                 assert_eq!(tmp.to_string(), $s);
             }
         };
     }
-    test!(A, N, F, S, "á");
-    test!(O, W, N, J, "ợ");
-    test!(U, N, S, N, "u");
-    test!(E, D, N, F, "ề");
-    test!(I, N, N, X, "ĩ");
-    test!(A, D, S, R, "ẩ");
+    test!(A, N, F, S, "á", Ok(()));
+    test!(O, W, N, J, "ợ", Ok(()));
+    test!(U, N, S, N, "u", Ok(()));
+    test!(E, D, N, F, "ề", Ok(()));
+    test!(I, N, N, X, "ĩ", Ok(()));
+    test!(A, D, S, R, "ẩ", Ok(()));
 }
 #[test]
 fn test_vword_parse() {
@@ -388,27 +401,28 @@ fn test_vword_parse() {
 #[test]
 fn test_vword_set_tone() {
     macro_rules! test {
-        ( $x:expr, $y:ident, $z:expr ) => {
+        ( $x:expr, $y:ident, $z:expr, $r:expr) => {
             {
                 let mut tmp = VWord::from_str($x);
-                tmp.set_tone(&Tone::$y);
+                assert_eq!(tmp.toggle_tone(&Tone::$y), $r);
                 assert_eq!(tmp.to_string(), $z);
             }
         };
     }
 
     // Single vovel test
-    test!("cha", R, "chả"); test!("chản", S, "chán");
-    test!("quy", S, "quý"); test!("u", S, "ú");
+    test!("cha", R, "chả", Ok(())); test!("chản", S, "chán", Ok(()));
+    test!("quy", S, "quý", Ok(())); test!("u", S, "ú", Ok(()));
+    test!("qu", S, "qu", Err(())); test!("chả", R, "cha", Err(()));
     // Double vovel test
-    test!("tiêu", S, "tiếu"); test!("yêu", S, "yếu");
-    test!("uông", S, "uống"); test!("ua", R, "ủa");
-    test!("sương", S, "sướng"); test!("ia", R, "ỉa");
-    test!("ưa", F, "ừa");
+    test!("tiêu", S, "tiếu", Ok(())); test!("yêu", S, "yếu", Ok(()));
+    test!("uông", S, "uống", Ok(())); test!("ua", R, "ủa", Ok(()));
+    test!("sương", S, "sướng", Ok(())); test!("ia", R, "ỉa", Ok(()));
+    test!("ưa", F, "ừa", Ok(()));
     // Other cases
-    test!("thuy", S, "thúy"); test!("toan", S, "toán");
-    test!("oan", S, "oán"); test!("tau", F, "tàu");
-    test!("ay", R, "ảy"); test!("nguyên", X, "nguyễn");
+    test!("thuy", S, "thúy", Ok(())); test!("toan", S, "toán", Ok(()));
+    test!("oan", S, "oán", Ok(())); test!("tau", F, "tàu", Ok(()));
+    test!("ay", R, "ảy", Ok(())); test!("nguyên", X, "nguyễn", Ok(()));
 }
 #[test]
 fn teset_vword_toggle() {
@@ -428,6 +442,7 @@ fn teset_vword_toggle() {
             }
         };
     }
+    test!(d "x", "x", Err(()));
     test!(d "dang", "đang", Ok(()) ); test!(d "đang", "dang", Err(()) );
     test!(v E, D, "e", "ê", Ok(())); test!(v A, D, "â", "a", Err(()));
     test!(v O, W, "ố", "ớ", Ok(())); test!(v O, D, "ồ", "ò", Err(()));
