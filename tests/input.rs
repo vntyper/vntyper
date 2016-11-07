@@ -24,5 +24,5 @@ fn vietnamese() {
     test_ok("giao", 's', "giáo"); test_ok("gi", 'f', "gì");
     test_err("cháu", 's', "chau"); test_err("cháu!", 's', "cháu!");
 
-    test_ok("u", 'w', "ư");
+    test_ok("u", 'w', "ư"); test_ok("hôi", 'j', "hội");
 }

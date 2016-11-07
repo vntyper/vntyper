@@ -6,7 +6,7 @@ use util;
 use input_method::InputMethod;
 use input_method::KeyType;
 use rustc_serialize::json;
-use vword::{ VWord, VChar };
+use vword::{ VWord, VChar, VResult };
 
 #[derive(Debug, PartialEq)]
 #[derive(RustcDecodable, RustcEncodable)]
@@ -66,29 +66,31 @@ impl Input {
                 });
             (VWord::new_raw(x, y), VWord::new_raw(z, t))
         };
+
+
+
         if util::is_vietnamese(&word) {
-            let key_type = self.input_method.get_type(self.modifier);
-            match key_type {
-                KeyType::None => Err(rest.to_string() + &word.to_string()),
-                KeyType::Toggle(ref x, ref y) => {
-                    match word.toggle_vovel(x, y) {
-                        Err(_) => Err(rest.to_string() + &word.to_string()),
-                        Ok(_) => Ok(rest.to_string() + &word.to_string()),
+
+            let key_types = self.input_method.get_type(self.modifier);
+            for x in &key_types {
+                let mut process = |key_type: &KeyType| {
+                    match *key_type {
+                        KeyType::None => (VResult::None, word.to_string()),
+                        KeyType::Toggle(ref x, ref y) => {
+                            (word.toggle_vovel(x, y), word.to_string())
+                        },
+                        KeyType::Tone(ref x) => (word.toggle_tone(x), word.to_string()),
+                        KeyType::ToggleD => (word.toggle_d(), word.to_string()),
                     }
-                },
-                KeyType::Tone(ref x) => {
-                    match word.toggle_tone(x) {
-                        Err(_) => Err(rest.to_string() + &word.to_string()),
-                        Ok(_) => Ok(rest.to_string() + &word.to_string()),
-                    }
-                },
-                KeyType::ToggleD => {
-                    match word.toggle_d() {
-                        Err(_) => Err(rest.to_string() + &word.to_string()),
-                        Ok(_) => Ok(rest.to_string() + &word.to_string()),
-                    }
-                },
+                };
+
+                match process(x) {
+                    (VResult::Set, s) => return Ok(rest.to_string() + &s),
+                    (VResult::Unset, s) => return Err(rest.to_string() + &s),
+                    _ => {}
+                }
             }
+            Err(rest.to_string() + &word.to_string())
         } else {
             Err(rest.to_string() + &word.to_string())
         }

@@ -48,21 +48,21 @@ impl InputMethod {
     pub fn telex() -> InputMethod {
         InputMethod::new(['a', 'w', 'e', 'o', 'w', 'w', 'd', 's', 'f', 'r', 'x', 'j'])
     }
-    pub fn get_type(&self, c: char) -> KeyType {
-        match c {
-            c if c == self.aa => KeyType::Toggle(Raw::A, Flag::D),
-            c if c == self.aw => KeyType::Toggle(Raw::A, Flag::W),
-            c if c == self.ee => KeyType::Toggle(Raw::E, Flag::D),
-            c if c == self.oo => KeyType::Toggle(Raw::O, Flag::D),
-            c if c == self.ow => KeyType::Toggle(Raw::O, Flag::W),
-            c if c == self.uw => KeyType::Toggle(Raw::U, Flag::W),
-            c if c == self.dd => KeyType::ToggleD,
-            c if c == self.s => KeyType::Tone(Tone::S),
-            c if c == self.f => KeyType::Tone(Tone::F),
-            c if c == self.r => KeyType::Tone(Tone::R),
-            c if c == self.x => KeyType::Tone(Tone::X),
-            c if c == self.j => KeyType::Tone(Tone::J),
-            _ => KeyType::None,
-        }
+    pub fn get_type(&self, c: char) -> Vec<KeyType> {
+        let mut ret = Vec::new();
+        if c == self.aa { ret.push(KeyType::Toggle(Raw::A, Flag::D)); }
+        if c == self.aw { ret.push(KeyType::Toggle(Raw::A, Flag::W)); }
+        if c == self.ee { ret.push(KeyType::Toggle(Raw::E, Flag::D)); }
+        if c == self.oo { ret.push(KeyType::Toggle(Raw::O, Flag::D)); }
+        if c == self.ow { ret.push(KeyType::Toggle(Raw::O, Flag::W)); }
+        if c == self.uw { ret.push(KeyType::Toggle(Raw::U, Flag::W)); }
+        if c == self.dd { ret.push(KeyType::ToggleD); }
+        if c == self.s { ret.push(KeyType::Tone(Tone::S)); }
+        if c == self.f { ret.push(KeyType::Tone(Tone::F)); }
+        if c == self.r { ret.push(KeyType::Tone(Tone::R)); }
+        if c == self.x { ret.push(KeyType::Tone(Tone::X)); }
+        if c == self.j { ret.push(KeyType::Tone(Tone::J)); }
+        ret.push(KeyType::None);
+        ret
     }
 }
