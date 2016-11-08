@@ -28,13 +28,13 @@ pub enum VResult {
 
 /// Enum to store a character for Vietnamese's text processing.
 /// The character does not need to be a valid Vietnamese's character.
-#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug)]
+#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug, Hash)]
 pub enum VChar {
     Consonant(char),
     Vovel(Raw, Flag, Tone),
     Invalid(char),
 }
-#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug)]
+#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug, Hash)]
 pub enum Tone {
     N, // None
     S, // /
@@ -43,7 +43,7 @@ pub enum Tone {
     X, // ~
     J, // .
 }
-#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug)]
+#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug, Hash)]
 pub enum Raw {
     A, E, I, O, U, Y,
 }
@@ -51,7 +51,7 @@ pub enum Raw {
 /// `Flag::N`: Flag for a, e, i,... (No flag)
 /// `Flag::W`: Flag for ă, ư, ơ
 /// `Flag::D`: Flag for â, ô, ê
-#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug)]
+#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug, Hash)]
 pub enum Flag {
     N, // Flag for a, e, i, o, y, u
     W, // Flag for ă, ơ,...
@@ -169,7 +169,7 @@ impl VChar {
 
 /// This struct hold a sequence of character for Vietnamese's text processing.
 /// The data it hold does not need to be a valid Vietnamese text.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Debug, Hash)]
 pub struct VWord {
     data: Vec<VChar>,
     upcase: Vec<bool>,
@@ -306,7 +306,7 @@ impl VWord {
             two_vovels!(U, W, A, N, 0); // ưa => ừa
         }
 
-        // 'y', 'i' is strictly a "phụ âm cuối".
+        // 'y', 'i' is a "phụ âm cuối".
         // 'o', 'u' can be a "phụ âm cuối".
         for i in 1..vovels.len() {
             if vovels[i] == (Raw::Y, Flag::N)
@@ -366,6 +366,7 @@ impl VWord {
     pub fn iter(&self) -> iter::Zip<slice::Iter<VChar>, slice::Iter<bool>> {
         self.data.iter().zip(self.upcase.iter())
     }
+    pub fn vchars(&self) -> &Vec<VChar> { &self.data }
 }
 
 #[test]
